@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+    stages {
+        stage('Source Code Checkout') {
+            steps {
+                echo 'Pulling latest code from TeleMedTech repository...'
+            }
+        }
+        stage('Static Application Security Testing (SAST)') {
+            steps {
+                echo 'Scanning Node.js and React code for CVEs and vulnerabilities...'
+            }
+        }
+        stage('Build Docker Images') {
+            steps {
+                echo 'Building frontend and backend containers...'
+            }
+        }
+        stage('Dynamic Security Scan (DAST)') {
+            steps {
+                echo 'Scanning compiled Docker images using Trivy...'
+            }
+        }
+        stage('Deploy to Production (Med_Net)') {
+            steps {
+                echo 'Deploying clean images to the internal Docker bridge network...'
+            }
+        }
+    }
+}

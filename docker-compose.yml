@@ -1,0 +1,88 @@
+
+services:
+  # 1. FRONTEND: React UI (Custom Build)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: telemed_react
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - med_net
+
+  # 2. BACKEND: Node.js / Express API (Custom Build)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: telemed_node_api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://root:password@mongo_db:27017/telemedtech?authSource=admin
+      - NODE_ENV=development
+    depends_on:
+      - mongo_db
+    networks:
+      - med_net
+
+  # 3. DATABASE: MongoDB (Docker Hub)
+  mongo_db:
+    image: mongo:7.0
+    container_name: telemed_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - med_net
+
+  # 4. DATABASE UI: Mongo Express
+  mongo_ui:
+    image: mongo-express:latest
+    container_name: telemed_mongo_ui
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_URL: "mongodb://root:password@mongo_db:27017/?authSource=admin"
+    depends_on:
+      - mongo_db
+    networks:
+      - med_net
+
+  # 5. DEVSECOPS: Jenkins CI/CD (Docker Hub)
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: telemed_jenkins
+    user: "0"
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock 
+    networks:
+      - med_net
+
+networks:
+  med_net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  jenkins_data:
