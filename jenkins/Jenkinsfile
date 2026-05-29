@@ -1,30 +1,102 @@
 pipeline {
     agent any
+
     stages {
-        stage('Source Code Checkout') {
+        stage('Environment Setup') {
             steps {
-                echo 'Pulling latest code from TeleMedTech repository...'
+                echo 'Injecting modern Docker (v26) and Docker Compose...'
+                sh '''
+                    # 1. Download modern Docker Compose
+                    curl -sSL https://github.com/docker/compose/releases/download/v2.26.1/docker-compose-linux-x86_64 -o /usr/bin/docker-compose
+                    chmod +x /usr/bin/docker-compose
+                    
+                    # 2. Download modern Docker CLI
+                    curl -sSL https://download.docker.com/linux/static/stable/x86_64/docker-26.0.1.tgz -o /tmp/docker.tgz
+                    tar -xzf /tmp/docker.tgz -C /tmp
+                    cp /tmp/docker/docker /usr/bin/docker
+                    chmod +x /usr/bin/docker
+                    
+                    echo "Modern Tools Successfully Installed:"
+                    docker --version
+                    docker-compose --version
+                '''
             }
         }
+        
+        stage('Verify File Connection') {
+            steps {
+                dir('/app') {
+                    echo 'Checking if Windows files successfully connected to the safe /app folder...'
+                    sh 'ls -la'
+                }
+            }
+        }
+        
+        stage('Build Application Containers') {
+            steps {
+                dir('/app') {
+                    echo 'Building ONLY the frontend and backend...'
+                    sh 'docker-compose build frontend backend'
+                }
+            }
+        }
+        
         stage('Static Application Security Testing (SAST)') {
             steps {
                 echo 'Scanning Node.js and React code for CVEs and vulnerabilities...'
             }
         }
-        stage('Build Docker Images') {
-            steps {
-                echo 'Building frontend and backend containers...'
-            }
-        }
+        
         stage('Dynamic Security Scan (DAST)') {
             steps {
                 echo 'Scanning compiled Docker images using Trivy...'
             }
         }
-        stage('Deploy to Production (Med_Net)') {
+        
+        stage('Deploy Services') {
             steps {
-                echo 'Deploying clean images to the internal Docker bridge network...'
+                dir('/app') {
+                    echo 'Obliterating ALL old containers (including Mongo) to fix the network split...'
+                    sh 'docker rm -f telemed_node_api telemed_react telemed_mongo || true'
+                    
+                    echo 'Deploying the app and database, ignoring Jenkins...'
+                    // Explicitly list the services so Jenkins doesn't try to recreate itself
+                    sh 'docker-compose up -d frontend backend mongo_db'
+                }
             }
+        }
+        
+        stage('Security Health Verification') {
+            steps {
+                echo 'Allowing API services to boot...'
+                sleep time: 10, unit: 'SECONDS'
+                
+                echo 'Bypassing Docker DNS network isolation...'
+                // Using triple quotes (''') so Groovy doesn't misinterpret the bash variables
+                sh '''
+                    # Grab the raw internal IP of the backend container directly from the Docker engine
+                    BACKEND_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' telemed_node_api)
+                    echo "Pinging Backend at raw IP: $BACKEND_IP"
+                    
+                    # Hit the health endpoint using the raw IP
+                    curl -sS -f http://$BACKEND_IP:5000/api/health || exit 1
+                '''
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo '==================================================='
+            echo ' SUCCESS DEPLOYMENT VALIDATION MARKER '
+            echo ' All stages passed! The TeleMedTech API is healthy. '
+            echo '==================================================='
+        }
+        failure {
+            echo '==================================================='
+            echo ' PIPELINE FAILED '
+            echo ' Check logs above. (Containers left active for debugging). '
+            echo '==================================================='
         }
     }
 }

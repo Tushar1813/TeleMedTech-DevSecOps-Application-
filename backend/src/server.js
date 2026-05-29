@@ -17,9 +17,12 @@ app.use('/api/doctors', doctorRoutes);
 const appointmentRoutes = require('./routes/appointmentRoutes');
 app.use('/api/appointments', appointmentRoutes);
 
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
+
 const PORT = process.env.PORT || 5000;
 // CRITICAL FIX: Changed 'localhost' to 'telemed_mongo' for Docker networking
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://telemed_mongo:27017/telemedtech';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://root:password@mongo_db:27017/telemedtech?authSource=admin';
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ Connected to TeleMedTech MongoDB'))

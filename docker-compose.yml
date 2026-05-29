@@ -66,7 +66,7 @@ services:
 
   # 5. DEVSECOPS: Jenkins CI/CD (Docker Hub)
   jenkins:
-    image: jenkins/jenkins:lts
+    build: ./jenkins
     container_name: telemed_jenkins
     user: "0"
     restart: unless-stopped
@@ -76,6 +76,7 @@ services:
     volumes:
       - jenkins_data:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock 
+      - ./:/app
     networks:
       - med_net
 

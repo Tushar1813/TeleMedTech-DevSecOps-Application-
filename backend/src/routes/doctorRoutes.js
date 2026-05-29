@@ -1,15 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const Doctor = require('../models/Doctor');
+const authMiddleware = require('../middleware/authMiddleware');
 
-// GET Route: Fetch all available doctors
-router.get('/available', async (req, res) => {
+// Protected route to fetch all doctors with query filtering
+router.get('/', authMiddleware, async (req, res) => {
     try {
-        const availableDoctors = await Doctor.find({ isAvailable: true }).select('-password');
-        res.json(availableDoctors);
+        const { search, specialization } = req.query;
+        let query = {};
+
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+        if (specialization) {
+            query.specialization = { $regex: specialization, $options: 'i' };
+        }
+
+        const doctors = await Doctor.find(query, '-password');
+        res.json(doctors);
     } catch (error) {
-        console.error("Error fetching doctors:", error);
-        res.status(500).json({ error: "Failed to fetch available doctors." });
+        console.error('Fetch Doctors Error:', error);
+        res.status(500).json({ error: 'Server error fetching doctors list.' });
     }
 });
 

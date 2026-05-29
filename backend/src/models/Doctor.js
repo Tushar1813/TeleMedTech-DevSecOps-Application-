@@ -4,10 +4,8 @@ const doctorSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    specialty: { type: String, required: true }, // e.g., "Cardiologist", "Pediatrician"
-    experienceYears: { type: Number, required: true },
-    isAvailable: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now }
-});
+    specialization: { type: String, required: true },
+    role: { type: String, default: 'doctor' }
+}, { timestamps: true });
 
 module.exports = mongoose.model('Doctor', doctorSchema);
