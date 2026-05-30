@@ -64,7 +64,7 @@ services:
     networks:
       - med_net
 
-  # 5. DEVSECOPS: Jenkins CI/CD (Docker Hub)
+  # 5. DEVSECOPS: Jenkins CI/CD 
   jenkins:
     build: ./jenkins
     container_name: telemed_jenkins
