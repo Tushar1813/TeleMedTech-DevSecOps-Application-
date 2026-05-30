@@ -56,11 +56,14 @@ pipeline {
         stage('Deploy Services') {
             steps {
                 dir('/app') {
-                    echo 'Obliterating ALL old containers (including Mongo) to fix the network split...'
-                    sh 'docker rm -f telemed_node_api telemed_react telemed_mongo || true'
+                    // 1. Standard compose down just in case
+                    sh 'docker-compose down'
                     
-                    echo 'Deploying the app and database, ignoring Jenkins...'
-                    // Explicitly list the services so Jenkins doesn't try to recreate itself
+                    // 2. THE BULLDOZER: Forcefully kill the containers by name no matter who made them.
+                    // The "|| true" at the end means "if they don't exist, don't crash, just keep going."
+                    sh 'docker rm -f telemed_mongo telemed_node_api telemed_react telemed_mongo_ui || true'
+                    
+                    // 3. Deploy the fresh containers safely
                     sh 'docker-compose up -d frontend backend mongo_db'
                 }
             }

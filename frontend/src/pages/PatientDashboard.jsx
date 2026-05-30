@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/useAuthStore';
 import api from '../api/axiosConfig';
+import { Heart, Activity, User, Download, FileText } from 'lucide-react';
 
 const PatientDashboard = () => {
     const { user } = useAuthStore();
@@ -36,6 +37,9 @@ const PatientDashboard = () => {
         setIsModalOpen(true);
     };
 
+    const upcomingAppointments = appointments.filter(apt => apt.status !== 'Completed');
+    const pastAppointments = appointments.filter(apt => apt.status === 'Completed');
+
     return (
         <div className="space-y-8 relative max-w-4xl mx-auto">
             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
@@ -43,6 +47,37 @@ const PatientDashboard = () => {
                 <p className="text-slate-600">
                     Welcome back, {user?.name || 'Patient'}. Here are your upcoming appointments.
                 </p>
+                <div className="flex flex-wrap gap-2 mt-4">
+                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">Blood Group: O+</span>
+                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">Age: 32</span>
+                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">Height: 180cm</span>
+                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">Weight: 75kg</span>
+                    <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">Known Allergies: None</span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+                <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-slate-200 flex flex-col items-center justify-center space-y-3">
+                    <div className="p-3 bg-red-100 text-red-500 rounded-full">
+                        <Heart className="w-8 h-8" />
+                    </div>
+                    <h4 className="text-slate-500 font-bold uppercase tracking-wider text-xs">Avg Heart Rate</h4>
+                    <p className="text-2xl font-black text-slate-800">72 bpm</p>
+                </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-slate-200 flex flex-col items-center justify-center space-y-3">
+                    <div className="p-3 bg-blue-100 text-blue-500 rounded-full">
+                        <Activity className="w-8 h-8" />
+                    </div>
+                    <h4 className="text-slate-500 font-bold uppercase tracking-wider text-xs">Blood Pressure</h4>
+                    <p className="text-2xl font-black text-slate-800">120/80 mmHg</p>
+                </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-slate-200 flex flex-col items-center justify-center space-y-3">
+                    <div className="p-3 bg-emerald-100 text-emerald-500 rounded-full">
+                        <User className="w-8 h-8" />
+                    </div>
+                    <h4 className="text-slate-500 font-bold uppercase tracking-wider text-xs">BMI</h4>
+                    <p className="text-2xl font-black text-slate-800">23.1 (Normal)</p>
+                </div>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -52,13 +87,13 @@ const PatientDashboard = () => {
                 
                 {loading ? (
                     <p className="text-slate-500">Loading appointments...</p>
-                ) : appointments.length === 0 ? (
+                ) : upcomingAppointments.length === 0 ? (
                     <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-xl">
                         <p className="text-slate-500 font-medium">You have no upcoming appointments.</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {appointments.map((apt) => (
+                        {upcomingAppointments.map((apt) => (
                             <div key={apt._id} className="p-5 border border-slate-200 rounded-xl hover:shadow-md transition bg-slate-50">
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                                     <div>
@@ -88,6 +123,39 @@ const PatientDashboard = () => {
                                         <span className="mr-2 text-lg">📅</span> {new Date(apt.appointmentDate).toLocaleString()}
                                     </span>
                                     {apt.notes && <span className="mt-3 sm:mt-0 italic truncate max-w-sm text-slate-500">"{apt.notes}"</span>}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Past Consultations Section */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="text-xl font-bold text-slate-800 mb-6">Past Consultations</h3>
+                {pastAppointments.length === 0 ? (
+                    <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-xl">
+                        <p className="text-slate-500 font-medium">You have no past consultations.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {pastAppointments.map((apt) => (
+                            <div key={apt._id} className="p-5 border border-slate-200 rounded-xl hover:shadow-md transition bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                                <div>
+                                    <h4 className="font-bold text-sky-700 text-lg">Dr. {apt.doctorId?.name || 'Unknown Provider'}</h4>
+                                    <p className="text-sm text-slate-500 font-medium">{new Date(apt.appointmentDate).toLocaleDateString()}</p>
+                                    <p className="text-sm text-slate-700 mt-1"><span className="font-semibold">Diagnosis:</span> Routine Checkup</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => viewRecord(apt)}
+                                        className="px-4 py-2 text-sm font-bold bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors flex items-center gap-2"
+                                    >
+                                        <FileText className="w-4 h-4" /> View Record
+                                    </button>
+                                    <button className="px-4 py-2 text-sm font-bold border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2">
+                                        <Download className="w-4 h-4" /> Download Rx
+                                    </button>
                                 </div>
                             </div>
                         ))}

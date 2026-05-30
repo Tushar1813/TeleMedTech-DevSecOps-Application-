@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/useAuthStore';
 import api from '../api/axiosConfig';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, CheckCircle, Clock, FileText, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, FileText, XCircle, Star, Users } from 'lucide-react';
 
 const DoctorDashboard = () => {
     const { user } = useAuthStore();
@@ -106,7 +106,7 @@ const DoctorDashboard = () => {
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6"
             >
                 {/* Pending Stat */}
                 <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-5 hover:shadow-md transition-shadow">
@@ -136,8 +136,30 @@ const DoctorDashboard = () => {
                         <CheckCircle className="w-8 h-8" />
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Completed</p>
+                        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Completed</p>
                         <p className="text-3xl font-black text-slate-800 mt-1">{completedCount}</p>
+                    </div>
+                </motion.div>
+
+                {/* Practice Analytics - Patients Seen */}
+                <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-5 hover:shadow-md transition-shadow">
+                    <div className="p-4 bg-purple-100 text-purple-600 rounded-xl">
+                        <Users className="w-8 h-8" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Monthly Patients</p>
+                        <p className="text-3xl font-black text-slate-800 mt-1">42</p>
+                    </div>
+                </motion.div>
+
+                {/* Practice Analytics - Average Rating */}
+                <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-5 hover:shadow-md transition-shadow">
+                    <div className="p-4 bg-yellow-100 text-yellow-500 rounded-xl">
+                        <Star className="w-8 h-8" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Average Rating</p>
+                        <p className="text-3xl font-black text-slate-800 mt-1">4.8</p>
                     </div>
                 </motion.div>
             </motion.div>
@@ -166,7 +188,7 @@ const DoctorDashboard = () => {
                         variants={containerVariants}
                         initial="hidden"
                         animate="show"
-                        className="space-y-4"
+                        className="space-y-6 relative border-l-2 border-slate-200 ml-4 pl-6"
                     >
                         <AnimatePresence mode="popLayout">
                             {appointments.map((apt) => (
@@ -177,13 +199,25 @@ const DoctorDashboard = () => {
                                     initial="hidden"
                                     animate="show"
                                     exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                                    className="bg-slate-50 border border-slate-200 p-5 rounded-2xl hover:shadow-md transition-shadow flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 group"
+                                    className="relative bg-slate-50 border border-slate-200 p-5 rounded-2xl hover:shadow-md transition-shadow flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 group"
                                 >
+                                    {/* Timeline Dot */}
+                                    <div className="absolute w-4 h-4 bg-sky-500 rounded-full -left-[31px] top-6 border-4 border-white shadow-sm"></div>
+
                                     {/* Patient Info */}
                                     <div className="flex-1">
-                                        <h4 className="font-bold text-slate-800 text-lg">
-                                            {apt.patientId?.name || 'Unknown Patient'}
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className="text-sm font-bold text-sky-600 bg-sky-100 px-2 py-0.5 rounded-md">
+                                                {new Date(apt.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <h4 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                                            {apt.patientId?.name || 'Unknown Patient'} 
+                                            <span className="text-slate-500 text-sm font-normal">(Age: 35)</span>
                                         </h4>
+                                        <p className="text-sm text-slate-700 font-medium mb-1 mt-1">
+                                            <span className="font-bold text-slate-800">Chief Complaint:</span> Frequent headaches
+                                        </p>
                                         <p className="text-sm text-slate-500 font-medium mb-2">{apt.patientId?.email}</p>
                                         <div className="flex flex-wrap items-center gap-3 text-sm">
                                             <span className="bg-white border border-slate-200 px-3 py-1 rounded-full text-slate-600 font-medium flex items-center gap-1.5 shadow-sm">
@@ -280,6 +314,21 @@ const DoctorDashboard = () => {
                                 </button>
                             </div>
                             <form onSubmit={handleSaveNotes} className="p-6 space-y-6 bg-white">
+                                {/* Mini-Profile Section */}
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-wrap gap-4 text-sm mb-4">
+                                    <div className="flex-1 min-w-[120px]">
+                                        <p className="text-slate-500 font-semibold mb-1 uppercase tracking-wider text-xs">Total Previous Visits</p>
+                                        <p className="font-bold text-slate-800">2</p>
+                                    </div>
+                                    <div className="flex-1 min-w-[120px]">
+                                        <p className="text-slate-500 font-semibold mb-1 uppercase tracking-wider text-xs">Last Visit Date</p>
+                                        <p className="font-bold text-slate-800">Jan 14, 2026</p>
+                                    </div>
+                                    <div className="flex-1 min-w-[120px]">
+                                        <p className="text-slate-500 font-semibold mb-1 uppercase tracking-wider text-xs">Ongoing Medications</p>
+                                        <p className="font-bold text-red-600">None</p>
+                                    </div>
+                                </div>
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Clinical Notes</label>
                                     <textarea 

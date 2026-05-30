@@ -42,7 +42,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - telemed_mongo_data:/data/db
     networks:
       - med_net
 
@@ -85,5 +85,6 @@ networks:
     driver: bridge
 
 volumes:
-  mongo_data:
+  telemed_mongo_data:
+    name: telemed_global_database_v1
   jenkins_data:
